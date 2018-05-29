@@ -1,0 +1,5 @@
+2018-05-04 08:42:26,704 INFO    : this is information
+2018-05-04 08:42:26,704 WARNING : this is warning message
+2018-05-04 08:42:26,704 ERROR   : this is error message
+2018-05-04 08:42:26,704 CRITICAL: this is fatal message, it is same as logger.critical
+2018-05-04 08:42:26,704 CRITICAL: this is critical message

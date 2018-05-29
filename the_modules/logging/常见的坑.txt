@@ -1,0 +1,79 @@
+import logging
+
+logging.basicConfig(level=logging.DEBUG)
+
+fmt = '%(levelname)s:%(message)s'
+console_handler = logging.StreamHandler()
+console_handler.setFormatter(logging.Formatter(fmt))
+logging.getLogger().addHandler(console_handler)
+
+logging.info('hello!')
+
+# INFO:root:hello!
+# INFO:hello!
+
+上面这个例子出现了重复日志，
+因为在第3行调用basicConfig()方法时系统会默认创建一个handler，如果你再添加一个控制台handler时就会出现重复日志。
+
+import logging
+
+def get_logger():
+    fmt = '%(levelname)s:%(message)s'
+    console_handler = logging.StreamHandler()
+    console_handler.setFormatter(logging.Formatter(fmt))
+    logger = logging.getLogger('App')
+    logger.setLevel(logging.INFO)
+    logger.addHandler(console_handler)
+    return logger
+
+def call_me():
+    logger = get_logger()
+    logger.info('hi')
+
+call_me()
+call_me()
+
+# INFO:hi
+# INFO:hi
+# INFO:hi
+
+在这个例子里hi居然打印了三次，如果再调用一次call_me()呢？我告诉你会打印6次。why?
+因为你每次调用get_logger()方法时都会给它加一个新的handler，
+你是自作自受。正常的做法应该是全局只配置logger一次。
+
+import logging
+
+def get_logger():
+    fmt = '%(levelname)s: %(message)s'
+    console_handler = logging.StreamHandler()
+    console_handler.setFormatter(logging.Formatter(fmt))
+    logger = logging.getLogger('App')
+    logger.setLevel(logging.INFO)
+    logger.addHandler(console_handler)
+    return logger
+
+def foo():
+    logging.basicConfig(format='[%(name)s]: %(message)s')
+    logging.warn('some module use root logger')
+
+def main():
+    logger = get_logger()
+    logger.info('App start.')
+    foo()
+    logger.info('App shutdown.')
+
+main()
+
+# INFO: App start.
+# [root]: some module use root logger
+# INFO: App shutdown.
+# [App]: App shutdown.
+
+为嘛最后的App shutdown打印了两次？
+所以在Stackoverflow上很多人都问，我应该怎么样把root logger关掉，root logger太坑爹坑妈了。
+只要你在程序中使用过root logger，那么默认你打印的所有日志都算它一份。
+上面的例子没有什么很好的办法，我建议你招到那个没有经过大脑就使用root logger的人，乱棍打死他或者开除他。
+
+如果你真的想禁用root logger，有两个不是办法的办法：
+logging.getLogger().handlers = []  # 删除所有的handler
+logging.getLogger().setLevel(logging.CRITICAL)  # 将它的级别设置到最高
